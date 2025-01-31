@@ -10,6 +10,7 @@
         <template v-if="col.name === null">&nbsp;</template>
         <span v-else-if="col.name === ''" class="bg-gray-500 text-gray-200 px-1">?</span>
         <template v-else>{{ col.name }}</template>
+        <span class="datv-header-handler" @mousedown="resizeStart(col.offset, $event)" @click="$event.stopPropagation()"></span>
       </button>
     </div>
     <div :style="colsRowStyle" class="absolute">
@@ -155,6 +156,30 @@ export default defineComponent({
       }
     }
 
+    function resizeStart(offset: number, e: MouseEvent) {
+      e.preventDefault()
+      const header = viewer.headers.value.find(h => h.offset === offset)!
+      const startX = e.clientX
+      const startSize = header.textLength || 1
+      const snapSize = rendering.CHAR_WIDTH
+      
+      document.addEventListener('mouseup', resizeStop)
+      document.addEventListener('mouseleave', resizeStop)
+      document.addEventListener('mousemove', resizeMove)
+      function resizeMove(e: MouseEvent) {
+        e.preventDefault()
+        const delta = e.clientX - startX
+        header.textLength = Math.max(1, startSize + Math.round(delta / snapSize))
+        triggerRef(viewer.headers)
+      }
+      function resizeStop () {
+        document.removeEventListener('mouseup', resizeStop)
+        document.removeEventListener('mouseleave', resizeStop)
+        document.removeEventListener('mousemove', resizeMove)
+        saveHeaders(viewer, db)
+      }
+    }
+
     const headers = computed(() =>
       renderHeaderCols(
         viewer.headers.value,
@@ -167,6 +192,7 @@ export default defineComponent({
       selectContinue,
       editHeader,
       handleHeaderWheel,
+      resizeStart,
       headersRowStyle: computed(() =>
         ({ transform: `translate(${-props.left}px, 0)`, lineHeight: rendering.COLUMN_BYTE_HEIGHT + 'px', fontFamily: rendering.FONT_FAMILY, fontSize: rendering.FONT_SIZE + 'px' })),
       colsRowStyle: computed(() =>
@@ -288,5 +314,16 @@ export default defineComponent({
   transform: translate3d(0, 0, 0);
   contain: strict;
   @apply bg-gray-100;
+}
+
+.datv-header-handler {
+  position: absolute;
+  right: 0px;
+  width: 4px;
+  height: 100%;
+  cursor: col-resize;
+  &:hover {
+    @apply bg-gray-500;
+  }
 }
 </style>
