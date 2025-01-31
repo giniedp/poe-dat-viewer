@@ -139,7 +139,11 @@ function useMouseMiddleButtonScroll (scrollByDelta: (dx: number, dy: number) => 
 
 function useMouseWheelScroll (scrollByDelta: (dx: number, dy: number) => void) {
   function handleMousewheel (e: WheelEvent) {
-    scrollByDelta(0, Math.sign(e.deltaY) * WHEEL_SCROLL_SPEED)
+    if (e.shiftKey) {
+      scrollByDelta(Math.sign(e.deltaY) * WHEEL_SCROLL_SPEED, 0)
+    } else {
+      scrollByDelta(0, Math.sign(e.deltaY) * WHEEL_SCROLL_SPEED)
+    }
   }
 
   return { handleMousewheel }
