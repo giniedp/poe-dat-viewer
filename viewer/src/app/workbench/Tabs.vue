@@ -5,7 +5,7 @@
         :class="[$style.tab, { [$style.active]: tab.isActive }]">
         <button class="pl-3 h-full"
           @click="setActiveTab(tab.id)"
-          @click.middle="closeTab(tab.id)">{{ tab.title }}</button>
+          @click.middle="handleCloseTabs(tab.id, $event)">{{ tab.title }}</button>
         <button class="mx-2 w-7 h-7 hover:bg-gray-500 text-center" title="Close"
           @click="closeTab(tab.id)"><i class="codicon codicon-close"></i></button>
       </div>
@@ -61,10 +61,30 @@ export default defineComponent({
       })
     }
 
+    function handleCloseTabs(id: string, e: MouseEvent) {
+      if (e.ctrlKey) {
+        // close others
+        for (const tab of tabs.value.filter(tab => tab.id !== id)) {
+          closeTab(tab.id)
+        }
+        return
+      }
+      if (e.shiftKey) {
+        // close to right
+        const idx = tabs.value.findIndex(tab => tab.id === id)
+        const toClose = tabs.value.slice(idx + 1)
+        for (const tab of toClose) {
+          closeTab(tab.id)
+        }
+        return
+      }
+      closeTab(id)
+    }
     return {
       tabs: _tabs,
       setActiveTab,
       closeTab,
+      handleCloseTabs,
       openImport,
       openDataTables,
       showDataTables: computed(() => {
